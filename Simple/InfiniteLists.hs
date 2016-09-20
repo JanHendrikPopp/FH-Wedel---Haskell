@@ -5,7 +5,7 @@ module InfiniteLists where
 -- names = ["a".."z", "a1".."z1", "a2".."z2", ...]
 
 names :: [String]
-names = undefined
+names = [[x] | x <- ['a'..'z']] ++ [[x] ++ show y | y <- [1..], x <- ['a'..'z']]
 
 
 -- | constructs the infinite sequence
@@ -14,7 +14,10 @@ names = undefined
 -- fibs = [0, 1, 1, 2, 3, 5, 8, ...]
 
 fibs :: [Integer]
-fibs = undefined
+fibs = 0 : 1 : zipWith (+) xs xy
+  where
+    xs = tail fibs
+    xy = fibs
 
 -- ----------------------------------------
 --
@@ -23,7 +26,8 @@ fibs = undefined
 -- sieve operation
 
 primes :: [Integer]
-primes = undefined
+primes = filterPrime [2..]
+  where filterPrime (p:xs) = p: filterPrime [ x | x <- xs, x `mod` p /= 0]
 
 -- ----------------------------------------
 --
@@ -49,19 +53,24 @@ hamilton :: [Integer]
 hamilton
   = merges [is2, is3, is5]
     where
-      is2 = undefined
-      is3 = undefined
-      is5 = undefined
+      is2 = [x * 2 | x <- [0..]]
+      is3 = [x * 3 | x <- [0..]]
+      is5 = [x * 5 | x <- [0..]]
 
 merge :: [Integer] -> [Integer] -> [Integer]
-merge = undefined
+merge [] x                      = x
+merge x []                      = x
+merge (x:xs) (y:ys) | y == x    = merge (x:xs) ys
+merge (x:xs) (y:ys) | y < x     = y : merge (x:xs) ys
+merge (x:xs) (y:ys) | otherwise = x : merge xs (y:ys)
 
 -- | @merges@ takes a list of lists of ascending integers
 -- and merges these lists into a single sorted list without any duplicates
 -- direct impl
 
 merges :: [[Integer]] -> [Integer]
-merges = undefined
+merges []     = []
+merges (x:xs) = merge x (merges xs)
 
 -- | @merges@ with a fold
 
