@@ -19,7 +19,7 @@ prop_nub' xs
 
 prop_nub'' :: String -> Bool
 prop_nub'' xs
-  = nub xs == L.nub xs
+  = nub'' xs == L.nub xs
 
 -- ----------------------------------------
 
@@ -45,7 +45,7 @@ prop_partition' xs
   = partition' p xs == L.partition p xs
   where
     p c = c > 'a'
-    
+
 prop_partition'' :: String -> Bool
 prop_partition'' xs
   = partition' p xs == L.partition p xs
@@ -57,11 +57,11 @@ prop_partition'' xs
 prop_inits :: String -> Bool
 prop_inits xs
   = inits xs == L.inits xs
-    
+
 prop_inits' :: String -> Bool
 prop_inits' xs
   = inits' xs == L.inits xs
-    
+
 -- ----------------------------------------
 
 prop_join'split' :: Char -> String -> Bool
@@ -95,7 +95,5 @@ main :: IO ()
 main
   = do testNub
        testSplit
-       
+
 -- ----------------------------------------
-
-
