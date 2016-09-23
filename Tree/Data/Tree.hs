@@ -37,7 +37,9 @@ invTree (Bin l r) = invTree l && invTree r
 
 -- | smart constructor
 bin :: Tree a -> Tree a -> Tree a
-bin  = undefined
+bin  l Null     = l
+bin Null r      = r
+bin l r         = Bin l r
 
 instance Functor Tree where
   fmap = undefined
@@ -72,25 +74,33 @@ instance Foldable Tree where
 visitTree :: b -> (a -> b) -> (b -> b -> b) -> Tree a -> b
 visitTree e tf bf = visit'
   where
-    visit' = undefined
+    visit' Null       = e
+    visit' (Tip x)    = tf x
+    visit' (Bin l r)  = bf (visitTree e tf bf l) (visitTree e tf bf r)
 
 -- special visitors
 
 sizeTree :: Tree a -> Int
-sizeTree = visitTree undefined undefined undefined
+sizeTree = visitTree 0 (const 1) (+)
 
 minDepth, maxDepth :: Tree a -> Int
-minDepth = visitTree undefined undefined undefined
-maxDepth = visitTree undefined undefined undefined
+minDepth = visitTree 0 (const 1) (\ l r -> 1 + min l r)
+maxDepth = visitTree 0 (const 1) (\ l r -> 1 + max l r)
 
 -- ----------------------------------------
 -- access functions
 
 viewL :: Tree a -> Maybe (a, Tree a)
-viewL = undefined
+viewL Null      = Nothing
+viewL (Tip a)   = Just (a, Null)
+viewL (Bin l r) = Just (x, bin t r)
+        where Just(x, t) = viewL l
 
 viewR :: Tree a -> Maybe (Tree a, a)
-viewR = undefined
+viewR Null      = Nothing
+viewR (Tip a)   = Just (Null, a)
+viewR (Bin l r) = Just (bin t l, x)
+        where Just(t, x) = viewR r
 
 head :: Tree a -> a
 head = maybe (error "head: empty tree") fst . viewL
@@ -113,7 +123,7 @@ toList = foldr undefined undefined
 
 -- | runs in O(n^2) due to the use of (++)
 toListSlow :: Tree a -> [a]
-toListSlow = visitTree undefined undefined undefined
+toListSlow = visitTree [] (\x -> [x]) (++)
 
 -- | build a balanced tree
 --
@@ -121,11 +131,37 @@ toListSlow = visitTree undefined undefined undefined
 
 -- weak balancing criterion
 fromList :: [a] -> Tree a
-fromList = undefined
+fromList xs     = toTree (toList (map (\x -> Tip x) xs))
+  where toList (x1:x2:x3:[])  = [bin x1 x2] ++ [x3]
+        toList (x1:x2:[])     = [bin x1 x2]
+        toList (x1:x2:xs)     = toList ([bin x1 x2] ++ toList xs)
+        toList [x]            = [x]
+        toTree (x1:x2:[])     = bin x1 x2
+        toTree [x]            = x
+
+fromList1 :: [a] -> [Tree a]
+fromList1 xs     = toList (map (\x -> Tip x) xs)
+  where toList (x1:x2:x3:[])  = [bin x1 x2] ++ [x3]
+        toList (x1:x2:[])     = [bin x1 x2]
+        toList (x1:x2:xs)     = toList ([bin x1 x2] ++ toList xs)
+        toList [x]            = [x]
+
+  --where toTree (x1:x2:x3:[]) = [(bin x1 x2)] ++ [x3]
+  --      toTree (x1:x2:[])    = bin x1 x2
+  --      toTree (x1:x2:xs)    = toTree ([(bin x1 x2)] ++ [toTree xs])
+  --      toTree [x]           = bin x Null
+
+--fromList []                        = Null
+--fromList [x]                       = Tip x
+--fromList (x1:x2:[])                = bin (Tip x1) (Tip x2)
+--fromList (x1:x2:xs)                =
 
 -- strong balancing criterion
 fromList' :: [a] -> Tree a
-fromList' = undefined
+fromList' []      = Null
+fromList' [x]     = Tip x
+fromList' xs      = bin (fromList'(fst (split xs))) (fromList'(snd (split xs)))
+      where split l = splitAt (((length l) + 1) `div` 2) l
 
 -- list to the right
 fromList'' :: [a] -> Tree a
