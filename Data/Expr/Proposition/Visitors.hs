@@ -16,18 +16,29 @@ type Idents = Set Ident
 freeVars :: Expr -> Idents
 freeVars
   = visit $
-    undefined
-    
+      V {vLit = const S.empty,
+         vVar = S.singleton,
+         vUnary = const id,
+         vBinary = const S.union}
+
 type VarEnv = [(Ident, Expr)]
 
 substVars :: VarEnv -> Expr -> Expr
 substVars env
   = visit $
-    undefined
+      V {vLit = Lit,
+         vVar = \i -> case (lookup i env) of
+                        Nothing -> Var i
+                        Just(x) -> x,
+         vUnary = Unary,
+         vBinary = Binary}
 
 eval :: Expr -> Bool
 eval
   = visit $
-    undefined
+      V {vLit = id,
+         vVar = error "free var in expression",
+         vUnary = mf1,
+         vBinary = mf2}
 
 -- ----------------------------------------

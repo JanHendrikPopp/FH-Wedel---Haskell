@@ -12,7 +12,10 @@ import           Data.Maybe                       (listToMaybe)
 -- ----------------------------------------
 
 truthTable :: Int -> [[Bool]]
-truthTable n = undefined
+truthTable n
+      | n == 0      = [[]]
+      | otherwise   = map (True:) tt ++ map (False:) tt
+        where tt = truthTable (n - 1)
 
 -- compute a proof by generating a truth table,
 -- iterate over all rows in the table
@@ -23,9 +26,20 @@ truthTable n = undefined
 -- is a tautology
 
 proof' :: Expr -> Maybe VarEnv
-proof' e
-  = undefined
+proof' e = pr e (tt e)
 
+  where
+    tt e                 = map (zip (freeVars e)) (map (map Lit) $ truthTable $ length (freeVars e))
+    subst e (x:xs)       = subst (substVars [x] e) xs
+    subst e [x]          = substVars [x] e
+    subst e []           = e
+    pr e [[]]            = case eval e of
+                            True  -> Nothing
+                            False -> Just ([])
+    pr e []              = Nothing
+    pr e (x:xs)          = case eval (subst e x) of
+                              True  -> pr e xs
+                              False -> Just (x)
 
 proof :: Expr -> String
 proof e
