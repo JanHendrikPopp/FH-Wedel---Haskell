@@ -34,7 +34,7 @@ nub' (x : xs) = x : nub' [ y | y <- xs, x /= y]
 -- after chapter about folds
 
 nub'' :: Eq a => [a] -> [a]
-nub'' = undefined
+nub'' = foldr (\x xs -> x : [ y | y <- xs, x /= y]) []
 
 
 -- ----------------------------------------
@@ -61,7 +61,12 @@ splitAt i xs = (take i xs, drop i xs)
 
 -- the impl
 splitAt' :: Int -> [a] -> ([a],[a])
-splitAt' = undefined
+splitAt' i [] = ([], [])
+splitAt' i (x:xs)
+      |  i == -1  = ([], (x:xs))
+      |  i == 0   = ([], (x:xs))
+      | otherwise = ([x] ++ (fst (res xs)), snd (res xs))
+        where res xs = splitAt' (i - 1) xs
 
 -- ----------------------------------------
 
@@ -71,13 +76,17 @@ splitAt' = undefined
 
 -- 1. impl: direct or with map
 intercalate :: [a] -> [[a]] -> [a]
-intercalate = undefined
+intercalate _ (x:[]) = x
+intercalate a (x:xs) = concat [x, a, intercalate a xs]
+intercalate _ []     = []
+
 
 -- 2. impl: with foldr
 -- after chapter about folds
 intercalate' :: [a] -> [[a]] -> [a]
-intercalate' = undefined
-
+intercalate' x = foldr inter []
+  where inter y []  = y
+        inter y ys  = y ++ x ++ ys
 -- ----------------------------------------
 
 -- | The 'partition' function takes a predicate and a list and returns
@@ -92,13 +101,17 @@ partition p xs
 
 -- 1. impl: direct
 partition' :: (a -> Bool) -> [a] -> ([a], [a])
-partition' = undefined
+partition' p xs = ([ x | x <- xs, p x] , [ x | x <- xs, (not . p) x])
 
 -- 2. impl: with foldr
 -- after chapter about folds
 
 partition'' :: (a -> Bool) -> [a] -> ([a], [a])
-partition'' = undefined
+partition'' p = foldr part ([], [])
+  where part x (xs, ys)
+            | p x       = (x:xs, ys)
+            | otherwise = (xs, x:ys)
+
 
 -- ----------------------------------------
 --
@@ -107,13 +120,16 @@ partition'' = undefined
 -- 1. impl: direct
 
 inits        :: [a] -> [[a]]
-inits = undefined
+inits []      = [[]]
+inits (x:xs)  = []: map (x:) (inits xs)
 
 -- 2. impl: with foldr
 -- after chapter about folds
-
 inits'        :: [a] -> [[a]]
-inits' = undefined
+inits' = foldr ini []
+  where
+    ini x [] = [[], [x]]
+    ini x xs = []: map (x:) xs
 
 -- ----------------------------------------
 
@@ -128,13 +144,18 @@ inits' = undefined
 --
 
 join' :: a -> [[a]] -> [a]
-join' = undefined
+join' _ []      = []
+join' _ (x:[])  = x
+join' c (x:xs)  = x ++ [c] ++ (join' c xs)
 
 -- | splits the input into sublists at delimiter
 --   1. arg is the delimiter
 --   the delimiter does not occur in elements of result list
 
 split' :: Eq a => a -> [a] -> [[a]]
-split' = undefined
+split' _ []     = []
+split' _ (x:[]) = [[x]]
+split' c (x:xs) | c == x    = split' c xs
+                | otherwise = [x] : (split' c xs)
 
 -- ----------------------------------------
