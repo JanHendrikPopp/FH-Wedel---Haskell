@@ -3,7 +3,7 @@
 module WordCount0 where
 
 -- the working horse
--- with predefined type Sum for (+,0) monoid 
+-- with predefined type Sum for (+,0) monoid
 import           Data.Monoid
 
 -- the more effizent Text representation
@@ -38,11 +38,14 @@ type Counters
 
 processText :: T.Text -> Counters
 processText t
-  = undefined . T.lines $ t
+  = mconcat (map toCounters (T.lines $ t))
 
 -- process a single line
 toCounters :: T.Text -> Counters
-toCounters = undefined
+toCounters line = (Sum 1,
+                   (Sum (length (T.words line)),
+                    (Sum (T.length line),
+                     ())))
 
 -- --------------------
 --
