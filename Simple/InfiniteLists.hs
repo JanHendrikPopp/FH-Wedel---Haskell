@@ -75,6 +75,6 @@ merges (x:xs) = merge x (merges xs)
 -- | @merges@ with a fold
 
 merges' :: [[Integer]] -> [Integer]
-merges' = undefined    -- after chapter about folds
+merges' = foldr (\x xs -> merge x xs) []
 
 -- ----------------------------------------
