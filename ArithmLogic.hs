@@ -6,12 +6,12 @@ import qualified Data.Expr.ArithmLogic.Eval                  as S
 import qualified Data.Expr.ArithmLogic.EvalMonad             as M
 import qualified Data.Expr.ArithmLogic.EvalErrorMonad        as E
 
--- {-
+ {-
 import qualified Data.Expr.ArithmLogic.EvalReaderErrorMonad  as R
 import qualified Data.Expr.ArithmLogic.EvalReaderErrorTrans  as RT
 import qualified Data.Expr.ArithmLogic.EvalListErrorMonad    as L
 import qualified Data.Expr.ArithmLogic.Check                 as C
--- -}
+ -}
 import           Data.Pretty
 
 import           Data.Maybe
@@ -21,7 +21,7 @@ pe = fromJust . parseExpr
 
 e1, e2, e3, e4, e5, e6, e7, e8, e9
   , e10, e11, e12, e13, e14, e15, e16, e17, e18, e19 :: Expr
-                          
+
 e1 = pe "1 + 2 - 3 "
 e2 = pe "1 + 2 * 3 / 7"
 e3 = pe "(true && false) => true"
@@ -60,7 +60,7 @@ eval3 = E.eval
 pp3 :: Expr -> IO ()
 pp3 = putStrLn . pretty . eval3
 
--- {-
+{-
 eval4 :: Expr -> L.Result L.Value
 eval4 = L.eval
 
@@ -81,4 +81,4 @@ eval6 = RT.eval'
 
 pp6 :: Expr -> IO ()
 pp6 = putStrLn . pretty . eval6
--- -}
+-}

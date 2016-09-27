@@ -17,7 +17,7 @@ data Value
   = B Bool
   | I Integer
     deriving (Eq, Ord, Show)
-             
+
 instance Pretty Value where
   pretty (B b) = pretty b
   pretty (I i) = pretty i
@@ -34,7 +34,7 @@ instance Functor Result where
 instance Applicative Result where
   pure = return
   (<*>) = ap
-  
+
 instance Monad Result where
   return = R
   (R x) >>= f = f x
@@ -50,7 +50,7 @@ instance (Pretty a) => Pretty (Result a) where
 -- wen can generalize the signature
 --
 -- This also holds for evalBool, mf1 and mf2
-  
+
 eval :: Expr -> Result Value
 eval (BLit b)          = return (B b)
 eval (ILit i)          = return (I i)
@@ -62,7 +62,7 @@ eval (Unary  op e1)    = do v1  <- eval e1
 eval (Binary op e1 e2) = do v1  <- eval e1
                             v2  <- eval e2
                             mf2 op v1 v2
-                            
+
 eval (Cond   c e1 e2)  = do b <- evalBool c
                             if b
                               then eval e1
@@ -76,7 +76,7 @@ evalBool e
        case r of
         (B b) -> return b
         (I _) -> error "bool result expected"
-  
+
 -- ----------------------------------------
 -- MF: Meaning function
 
