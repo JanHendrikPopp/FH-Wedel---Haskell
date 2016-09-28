@@ -3,11 +3,11 @@ where
 
 import           Data.Expr.Imperative
 import qualified Data.Expr.Imperative.EvalStateErrorMonad    as S
--- {-
+ {-
 import qualified Data.Expr.Imperative.EvalIOStateErrorMonad  as O
 import qualified Data.Expr.Imperative.EvalStateErrorTrans    as ST
 import qualified Data.Expr.Imperative.EvalIOStateErrorTrans  as OT
--- -}
+ -}
 import           Data.Pretty
 
 import           Data.Maybe
@@ -18,7 +18,7 @@ pe = fromJust . parseExpr
 e1, e2, e3, e4, e5, e6, e7, e8, e9
   , e10, e11, e12, e13, e14
   , e20 :: Expr
-                         
+
 e1 = pe "1 + 2 - 3 "
 e2 = pe "1 + 2 * 3 / 7"
 e3 = pe "(true && false) => true"
@@ -49,7 +49,7 @@ eval1 = S.eval'
 pp1 :: Expr -> IO ()
 pp1 = putStrLn . pretty . eval1
 
--- {-
+ {-
 eval2 :: Expr -> IO (O.ResVal O.Value, O.Store)
 eval2 = O.eval'
 
@@ -69,7 +69,4 @@ eval4 = OT.eval'
 pp4 :: Expr -> IO ()
 pp4 e = do res <- eval4 e
            putStrLn (pretty res)
--- -}
-
-
-
+ -}
