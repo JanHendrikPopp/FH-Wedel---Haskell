@@ -5,9 +5,9 @@ import           Data.Expr.ArithmLogic
 import qualified Data.Expr.ArithmLogic.Eval                  as S
 import qualified Data.Expr.ArithmLogic.EvalMonad             as M
 import qualified Data.Expr.ArithmLogic.EvalErrorMonad        as E
+import qualified Data.Expr.ArithmLogic.EvalReaderErrorMonad  as R
 
  {-
-import qualified Data.Expr.ArithmLogic.EvalReaderErrorMonad  as R
 import qualified Data.Expr.ArithmLogic.EvalReaderErrorTrans  as RT
 import qualified Data.Expr.ArithmLogic.EvalListErrorMonad    as L
 import qualified Data.Expr.ArithmLogic.Check                 as C
@@ -60,18 +60,18 @@ eval3 = E.eval
 pp3 :: Expr -> IO ()
 pp3 = putStrLn . pretty . eval3
 
+eval5 :: Expr -> R.ResVal R.Value
+eval5 = R.eval'
+
+pp5 :: Expr -> IO ()
+pp5 = putStrLn . pretty . eval5
+
 {-
 eval4 :: Expr -> L.Result L.Value
 eval4 = L.eval
 
 pp4 :: Expr -> IO ()
 pp4 = putStrLn . pretty . eval4
-
-eval5 :: Expr -> R.ResVal R.Value
-eval5 = R.eval'
-
-pp5 :: Expr -> IO ()
-pp5 = putStrLn . pretty . eval5
 
 typ :: Expr -> IO ()
 typ = putStrLn . pretty . C.check'
