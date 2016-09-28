@@ -25,7 +25,7 @@ import System.IO
 
 -- ----------------------------------------
 -- evaluation of simple imperative programs
--- 
+--
 -- this is an example for using the state monad
 -- the evaluator is derived out of the reader/error
 -- evaluator in ArithmLogic dir
@@ -38,7 +38,7 @@ data Value
   = B Bool
   | I Integer
     deriving (Eq, Ord, Show)
-             
+
 instance Pretty Value where
   pretty (B b) = pretty b
   pretty (I i) = pretty i
@@ -54,7 +54,7 @@ isI _     = False
 -- ----------------------------------------
 --
 -- the Value / Error sum type
-  
+
 data ResVal a
   = R { resVal :: a}
   | E { resErr :: EvalError }
@@ -67,7 +67,7 @@ instance Functor ResVal where
 instance Applicative ResVal where
   pure = return
   (<*>) = ap
-  
+
 instance Monad ResVal where
   return = R
   R x >>= f = f x
@@ -77,7 +77,7 @@ instance MonadError EvalError ResVal where
   throwError = E
   catchError r@(R _) _ = r
   catchError   (E e) f = f e
-  
+
 instance (Pretty a) => Pretty (ResVal a) where
   pretty (R x) = pretty x
   pretty (E e) = "error: " ++ pretty e
@@ -87,27 +87,28 @@ instance (Pretty a) => Pretty (ResVal a) where
 newtype Result a = RT { runResult :: Store -> IO (ResVal a, Store) }
 
 instance Functor Result where
-  fmap f (RT sf)
-    = undefined
-  
+  fmap f (RT sf) = RT $ \ store -> do (a, newStore) <- sf store
+                                      return (fmap f a, newStore)
+
 instance Applicative Result where
   pure  = return
   (<*>) = ap
 
 instance Monad Result where
-  return x
-    = RT $ \ st ->
-            undefined
+  return x = RT $ \ st -> do return (return x, st)
 
   RT sf >>= f
     = RT $ \ st ->
-            do undefined
+            do (a, newStore) <- sf st
+               case a of
+                E e -> return (E e, newStore)
+                R x -> let RT nsf = f x in
+                       nsf newStore
 
 instance MonadError EvalError Result where
   throwError e
-    = RT $ \ st ->
-            undefined
-  
+    = RT $ \ st -> return (E e, st)
+
   catchError (RT sf) handler
     = RT $ \ st ->
             do (rv, st') <- sf st
@@ -121,19 +122,20 @@ instance MonadError EvalError Result where
 
 instance MonadState Store Result where
   get
-    = RT $ \ st -> undefined
+    = RT $ \ st -> return (return st, st)
 
   put st
-    = RT $ \ _old -> undefined
+    = RT $ \ _old -> return (return (), st)
 
 instance MonadIO Result where
   liftIO io = RT $ \ st ->
-                    do undefined
-                              
+                    do rs <- io
+                       return (return rs, st)
+
 -- ----------------------------------------
 --
 -- variable store
-  
+
 newtype Store = Store (M.Map Ident Value)
               deriving (Show)
 
@@ -143,7 +145,7 @@ instance Pretty Store where
     where
       pretty' (i, v) = i ++ " :-> " ++ pretty v
       vars = M.toList m
-      
+
 emptyStore :: Store
 emptyStore = Store M.empty
 
@@ -155,11 +157,11 @@ insert i v (Store m) = Store $ M.insert i v m
 
 -- ----------------------------------------
 -- error handling
-  
+
 data EvalError
   = UndefVar String
   | NotImpl String
-  | ValErr  String Value 
+  | ValErr  String Value
   | Div0
   | NoLValue Expr
   | NoParse
@@ -172,7 +174,7 @@ instance Pretty EvalError where
   pretty Div0         = "divide by zero"
   pretty (NoLValue e) = "no lvalue: " ++ pretty e
   pretty NoParse      = "not a value"
-  
+
 boolExpected :: Value -> Result a
 boolExpected = throwError . ValErr "Bool"
 
@@ -208,16 +210,16 @@ readValue msg
     prompt s  = liftIO $
                 do hPutStr stdout s
                    hFlush  stdout
-                   
+
     getLine'
       = do l <- liftIO $ hGetLine stdin
            if all isSpace l
              then getLine'
              else return l
-        
+
     getVal Nothing     = noParse
     getVal (Just e)    = toValue e
-    
+
     toValue (BLit b)   = return (B b)
     toValue (ILit i)   = return (I i)
     toValue _          = noParse
@@ -233,7 +235,7 @@ writeValue s v
     putLine' l = liftIO $
                  do hPutStrLn stdout l
                     hFlush stdout
-                    
+
 -- ----------------------------------------
 
 eval' :: Expr -> IO (ResVal Value, Store)
@@ -244,7 +246,7 @@ eval (BLit b)          = return (B b)
 eval (ILit i)          = return (I i)
 
 eval (Var    i)        = readVar i
-                         
+
 eval (Unary preOp e)
   | preOp `elem` [PreIncr, PreDecr]
                        = do i <- evalLValue e
@@ -260,7 +262,7 @@ eval (Unary postOp e)
                             r <- mf1 postOp v
                             writeVar i r
                             return v
-                        
+
 eval (Unary  op e1)    = do v1  <- eval e1
                             mf1 op v1
 
@@ -288,7 +290,7 @@ eval (Binary op e1 e2)
                             mf2 op v1 v2
 
 eval (Binary op _ _)   = notImpl ("operator " ++ pretty op)
-                         
+
 eval (Cond   c e1 e2)  = do b <- evalBool c
                             if b
                               then eval e1
@@ -301,8 +303,11 @@ eval e@(While c body)   = do b <- evalBool c
                                else return (B b)
 
 eval (Read msg)         = readValue msg
-eval (Write msg e)      = do undefined
-                          
+eval (Write msg e)      = do ev <- eval e
+                             writeValue msg ev
+                             return ev
+
+
 evalBool :: Expr -> Result Bool
 evalBool e
   = do r <- eval e
@@ -343,7 +348,7 @@ mf1 PreDecr    = flip (mf2 Minus) (I 1)
 mf1 PostIncr   = flip (mf2 Plus ) (I 1)
 mf1 PostDecr   = flip (mf2 Minus) (I 1)
 -- mf1 op         = \ _ -> notImpl (show op)
-  
+
 op1BB :: (Bool -> Bool) -> MF1
 op1BB op (B b) = return $ B (op b)
 op1BB _  v     = boolExpected v
@@ -367,7 +372,7 @@ isStrict op
     , Plus, Minus, Mult, Div, Mod
     , Eq, Neq, Gr, Ge, Ls, Le
     ]
-    
+
 mf2 :: Op2 -> MF2
 mf2 And       = op2BBB (&&)
 mf2 Or        = op2BBB (||)
