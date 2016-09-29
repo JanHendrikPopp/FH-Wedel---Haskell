@@ -20,7 +20,7 @@ import Text.NanoParsec
 -- ----------------------------------------
 
 {- The grammar
-              
+
  number  = [ "-" ] digit { digit }
  digit   = "0" | "1" | ... | "8" | "9"
  expr    = term { addop term }
@@ -33,7 +33,7 @@ import Text.NanoParsec
 
 -- ----------------------------------------
 -- the abstract syntax
-              
+
 data Expr
   = Add Expr Expr
   | Mul Expr Expr
@@ -56,31 +56,42 @@ eval ex = case ex of
 
 -- parse an integer literal
 int :: Parser Expr
-int = undefined
+int = do n <- token number
+         return (Lit $ read n)
 
 expr :: Parser Expr
-expr = undefined
+expr = chainl1 term addop
+       <|>
+       term
 
 term :: Parser Expr
-term = undefined
+term = chainl1 factor mulop
+       <|>
+       factor
 
 factor :: Parser Expr
-factor = undefined
+factor = parens expr
+         <|>
+         int
+
 
 infixOp :: String -> (a -> a -> a) -> Parser (a -> a -> a)
-infixOp = undefined
+infixOp s op = do     _ <- reserved s
+                      return op
 
 addop :: Parser (Expr -> Expr -> Expr)
-addop = undefined
+addop = infixOp "+" Add
+        <|>
+        infixOp "-" Sub
 
 mulop :: Parser (Expr -> Expr -> Expr)
-mulop = undefined
+mulop = infixOp "*" Mul
 
 -- ----------------------------------------
 -- the main prog
 
 parse :: String -> Either String Expr
-parse = runParser expr
+parse = runParser (spaces >> expr)
 
 main :: IO ()
 main = do
@@ -93,6 +104,5 @@ main = do
               Left err -> putStrLn err
               Right e  -> print (eval e)
             main
-            
--- ----------------------------------------
 
+-- ----------------------------------------
