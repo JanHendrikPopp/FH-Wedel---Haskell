@@ -1,6 +1,6 @@
 module TestFunctionalList
 where
-
+--
 import           Data.FunctionalList
 import           Prelude hiding (foldl, foldr, map)
 import qualified Prelude as P
@@ -12,11 +12,11 @@ prop_fromTo xs
 
 prop_cons :: String -> Bool
 prop_cons xs
-  = toList (P.foldr cons empty xs) == xs 
+  = toList (P.foldr cons empty xs) == xs
 
 prop_snoc :: String -> Bool
 prop_snoc xs
-  = toList (P.foldl snoc empty xs) == xs 
+  = toList (P.foldl snoc empty xs) == xs
 
 prop_append :: String -> Bool
 prop_append xs0
@@ -27,7 +27,7 @@ prop_append xs0
     build xs = build xs1 `append` build xs2
       where
         (xs1, xs2) = P.splitAt (length xs `div` 2) xs
-        
+
 
 testFL :: IO ()
 testFL
