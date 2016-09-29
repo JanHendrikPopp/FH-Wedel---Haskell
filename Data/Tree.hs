@@ -42,31 +42,41 @@ bin Null r      = r
 bin l r         = Bin l r
 
 instance Functor Tree where
-  fmap = undefined
+  fmap f Null      = Null
+  fmap f (Tip x)   = Tip (f x)
+  fmap f (Bin l r) = Bin (fmap f l) (fmap f r)
 
 instance Applicative Tree where
-  pure  = undefined
+  pure  = Tip
+  --Null <*>         = Null
+
   (<*>) = undefined
 
 instance Monad Tree where
-  return     = undefined
-  _    >>= _ = undefined
+  return x          = Tip x
+  Null >>= _        = Null
+  Tip x >>= f       = f x
+  (Bin l r) >>= f   = Bin (l >>= f) (r >>= f)
+  --_    >>= _ = undefined
 
 instance Alternative Tree where
   empty = mzero   -- or Null
   (<|>) = mplus
 
 instance MonadPlus Tree where
-  mzero = undefined
-  mplus = undefined
+  mzero = Null
+  mplus = bin
 
 instance Monoid (Tree a) where
-  mempty  = undefined
-  mappend = undefined
+  mempty  = Null
+  mappend = bin
 
 -- fold elements like in a list from right to left
 instance Foldable Tree where
   foldr _ e t = undefined
+  foldr op e Null       = e
+  foldr op e (Tip x)    = op x e
+  foldr op e (Bin l r)  = foldr op (foldr op e r) l
 
 -- ----------------------------------------
 -- classical visitor
